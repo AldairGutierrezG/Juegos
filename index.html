@@ -1,3 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Aprender Jugando</title>
+
+<style>
+
+body{
+font-family:'Comic Sans MS', sans-serif;
+margin:0;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+text-align:center;
+
+background:#F4F9FF;
+
+background-image:
+radial-gradient(circle at 10% 20%, #FFD6E0 40px, transparent 41px),
+radial-gradient(circle at 80% 30%, #CDE7FF 50px, transparent 51px),
+radial-gradient(circle at 30% 80%, #FFF3B0 45px, transparent 46px),
+radial-gradient(circle at 90% 80%, #D8F8C6 60px, transparent 61px);
+}
+
+.container{
+width:100%;
+max-width:520px;
+background:white;
+border-radius:20px;
+padding:20px;
+box-shadow:0 10px 25px rgba(0,0,0,0.15);
+}
+
+button{
+padding:18px;
+margin:8px;
+font-size:22px;
+border:none;
+border-radius:20px;
+cursor:pointer;
+width:80%;
+}
+
+.letras{background:#A8E6CF;}
+.numeros{background:#FFD3B6;}
+.figuras{background:#B5D9FF;}
+.memoria{background:#F7C6FF;}
+
+.item{
+font-size:130px;
+}
+
+.palabra{
+font-size:28px;
+}
+
+canvas{
+border:3px dashed #bbb;
+border-radius:15px;
+background:#fff;
+}
+
+.hidden{
+display:none;
+}
+
+.avanzar{
+position:fixed;
+bottom:25px;
+right:25px;
+font-size:45px;
+background:#FFD966;
+width:80px;
+height:80px;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+cursor:pointer;
+}
+
+/* MEMORIA */
+
+.grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:10px;
+margin-top:20px;
+}
+
+.card{
+height:70px;
+background:#eee;
+border-radius:10px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:30px;
+cursor:pointer;
+}
+
+.card.open{
+background:white;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div id="inicio">
+
+<h1>Aprender</h1>
+
+<button class="letras" onclick="iniciar('letras')">📚 Letras</button>
+<button class="numeros" onclick="iniciar('numeros')">🔢 Números</button>
+<button class="figuras" onclick="iniciar('figuras')">🔺 Figuras</button>
+<button class="memoria" onclick="iniciarMemoria()">🧠 Memoria</button>
+
+</div>
+
+
+<div id="aprendizaje" class="hidden">
+
+<div class="item" id="item"></div>
+
+<div class="palabra" id="palabra"></div>
+
+<div style="font-size:40px;cursor:pointer;" onclick="hablar()">🔊</div>
+
+<h3>Dibuja aquí ✏</h3>
+
+<canvas id="canvas" width="350" height="200"></canvas>
+
+<br>
+
+<button onclick="limpiar()">🧽 Borrar</button>
+
+<br>
+
+<button onclick="volver()">Volver</button>
+
+</div>
+
+
+<div id="memoria" class="hidden">
+
+<h2>Juego de Memoria</h2>
+
+<div class="grid" id="grid"></div>
+
+<br>
+
+<button onclick="volver()">Volver</button>
+
+</div>
+
+</div>
+
+<div class="avanzar" onclick="siguiente()">➡</div>
+
 <script>
 
 const letras="ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("");
@@ -30,60 +197,6 @@ let index=0;
 
 const canvas=document.getElementById("canvas");
 const ctx=canvas.getContext("2d");
-
-/* CONFIGURACION DIBUJO */
-
-let dibujando=false;
-
-ctx.lineWidth=6;
-ctx.lineCap="round";
-ctx.strokeStyle="#333";
-
-/* EVENTOS MOUSE */
-
-canvas.addEventListener("mousedown",()=>dibujando=true);
-canvas.addEventListener("mouseup",()=>dibujando=false);
-canvas.addEventListener("mouseleave",()=>dibujando=false);
-
-canvas.addEventListener("mousemove",dibujar);
-
-/* EVENTOS TOUCH */
-
-canvas.addEventListener("touchstart",(e)=>{
-dibujando=true;
-e.preventDefault();
-});
-
-canvas.addEventListener("touchend",()=>dibujando=false);
-
-canvas.addEventListener("touchmove",(e)=>{
-
-let rect=canvas.getBoundingClientRect();
-
-let x=e.touches[0].clientX-rect.left;
-let y=e.touches[0].clientY-rect.top;
-
-dibujar({offsetX:x,offsetY:y});
-
-e.preventDefault();
-
-});
-
-/* FUNCION DIBUJAR */
-
-function dibujar(e){
-
-if(!dibujando)return;
-
-ctx.lineTo(e.offsetX,e.offsetY);
-ctx.stroke();
-
-ctx.beginPath();
-ctx.moveTo(e.offsetX,e.offsetY);
-
-}
-
-/* INICIAR MODOS */
 
 function iniciar(tipo){
 
@@ -120,8 +233,6 @@ dibujarGuia(valor);
 
 }
 
-/* SIGUIENTE */
-
 function siguiente(){
 
 index++;
@@ -133,8 +244,6 @@ index=0;
 mostrar();
 
 }
-
-/* VOZ */
 
 function hablar(){
 
@@ -148,8 +257,6 @@ speechSynthesis.speak(speech);
 
 }
 
-/* VOLVER */
-
 function volver(){
 
 document.querySelectorAll(".container > div").forEach(d=>d.classList.add("hidden"));
@@ -157,8 +264,6 @@ document.querySelectorAll(".container > div").forEach(d=>d.classList.add("hidden
 document.getElementById("inicio").classList.remove("hidden");
 
 }
-
-/* GUIA DE DIBUJO */
 
 function dibujarGuia(simbolo){
 
@@ -175,14 +280,8 @@ ctx.fillText(simbolo,canvas.width/2,canvas.height/2);
 
 }
 
-/* LIMPIAR */
-
 function limpiar(){
-
-ctx.clearRect(0,0,canvas.width,canvas.height);
-
 dibujarGuia(lista[index]);
-
 }
 
 /* MEMORIA */
@@ -262,3 +361,6 @@ abiertas=[];
 }
 
 </script>
+
+</body>
+</html>

@@ -16,14 +16,7 @@ justify-content:center;
 align-items:center;
 height:100vh;
 text-align:center;
-
-background-color:#F4F9FF;
-
-background-image:
-radial-gradient(circle at 10% 20%, #FFD6E0 40px, transparent 41px),
-radial-gradient(circle at 80% 30%, #CDE7FF 50px, transparent 51px),
-radial-gradient(circle at 30% 80%, #FFF3B0 45px, transparent 46px),
-radial-gradient(circle at 90% 80%, #D8F8C6 60px, transparent 61px);
+background:#F4F9FF;
 }
 
 .container{
@@ -38,7 +31,7 @@ box-shadow:0 10px 25px rgba(0,0,0,0.15);
 button{
 padding:20px;
 margin:10px;
-font-size:24px;
+font-size:22px;
 border:none;
 border-radius:20px;
 cursor:pointer;
@@ -86,7 +79,33 @@ display:flex;
 align-items:center;
 justify-content:center;
 cursor:pointer;
-box-shadow:0 6px 12px rgba(0,0,0,0.2);
+}
+
+/* MEMORAMA */
+
+#tablero{
+display:grid;
+grid-template-columns:repeat(4,80px);
+gap:10px;
+justify-content:center;
+margin-top:20px;
+}
+
+.carta{
+width:80px;
+height:80px;
+background:#FFD966;
+font-size:40px;
+display:flex;
+align-items:center;
+justify-content:center;
+border-radius:10px;
+cursor:pointer;
+}
+
+.oculta{
+background:#bbb;
+color:transparent;
 }
 
 </style>
@@ -103,6 +122,7 @@ box-shadow:0 6px 12px rgba(0,0,0,0.2);
 <button class="letras" onclick="iniciar('letras')">📚 Letras</button>
 <button class="numeros" onclick="iniciar('numeros')">🔢 Números</button>
 <button class="figuras" onclick="iniciar('figuras')">🔺 Figuras</button>
+<button onclick="iniciarMemorama()">🧠 Memorama</button>
 
 </div>
 
@@ -128,6 +148,18 @@ box-shadow:0 6px 12px rgba(0,0,0,0.2);
 
 </div>
 
+<div id="memorama" class="hidden">
+
+<h2>Memorama</h2>
+
+<div id="tablero"></div>
+
+<br>
+
+<button onclick="volver()">Volver</button>
+
+</div>
+
 <div id="final" class="hidden">
 
 <div class="estrella">⭐</div>
@@ -144,10 +176,17 @@ box-shadow:0 6px 12px rgba(0,0,0,0.2);
 
 <script>
 
+/* ACTIVAR AUDIO EN WEBVIEW */
+
+document.addEventListener("touchstart",function(){
+speechSynthesis.cancel();
+},{once:true});
+
+
 /* DATOS */
 
 const letras="ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("");
-const numeros=["0","1","2","3","4","5","6","7","8","9"];
+const numeros=[...Array(10).keys()];
 const figuras=["⬜","🔺","⚫","⬛","⭐"];
 
 const nombresFiguras={
@@ -156,14 +195,6 @@ const nombresFiguras={
 "⚫":"Círculo",
 "⬛":"Rectángulo",
 "⭐":"Estrella"
-};
-
-const palabras={
-A:"A de Árbol",
-B:"B de Barco",
-C:"C de Casa",
-D:"D de Dado",
-E:"E de Elefante"
 };
 
 let lista=[];
@@ -179,84 +210,50 @@ let dibujando=false;
 
 ctx.lineWidth=6;
 ctx.lineCap="round";
-ctx.strokeStyle="#333";
 
-/* FUNCION PARA POSICION */
-
-function posicionCanvas(e){
-
+function posicion(e){
 let rect=canvas.getBoundingClientRect();
-
-return {
+return{
 x:e.clientX-rect.left,
 y:e.clientY-rect.top
 };
-
 }
 
-/* ===== MOUSE ===== */
+/* MOUSE */
 
-canvas.addEventListener("mousedown",(e)=>{
-dibujando=true;
-});
-
-canvas.addEventListener("mouseup",()=>{
-dibujando=false;
-ctx.beginPath();
-});
-
+canvas.addEventListener("mousedown",()=>dibujando=true);
+canvas.addEventListener("mouseup",()=>{dibujando=false;ctx.beginPath();});
 canvas.addEventListener("mousemove",(e)=>{
-
-if(!dibujando) return;
-
-let pos=posicionCanvas(e);
-
-ctx.lineTo(pos.x,pos.y);
+if(!dibujando)return;
+let p=posicion(e);
+ctx.lineTo(p.x,p.y);
 ctx.stroke();
-
 ctx.beginPath();
-ctx.moveTo(pos.x,pos.y);
-
+ctx.moveTo(p.x,p.y);
 });
 
-/* ===== TOUCH ===== */
+/* TOUCH */
 
 canvas.addEventListener("touchstart",(e)=>{
-
 dibujando=true;
-
-let touch=e.touches[0];
-let pos=posicionCanvas(touch);
-
-ctx.moveTo(pos.x,pos.y);
-
+let t=e.touches[0];
+let p=posicion(t);
+ctx.moveTo(p.x,p.y);
 e.preventDefault();
-
-});
-
-canvas.addEventListener("touchend",()=>{
-
-dibujando=false;
-ctx.beginPath();
-
 });
 
 canvas.addEventListener("touchmove",(e)=>{
-
-if(!dibujando) return;
-
-let touch=e.touches[0];
-let pos=posicionCanvas(touch);
-
-ctx.lineTo(pos.x,pos.y);
+if(!dibujando)return;
+let t=e.touches[0];
+let p=posicion(t);
+ctx.lineTo(p.x,p.y);
 ctx.stroke();
-
 ctx.beginPath();
-ctx.moveTo(pos.x,pos.y);
-
+ctx.moveTo(p.x,p.y);
 e.preventDefault();
-
 });
+
+canvas.addEventListener("touchend",()=>{dibujando=false;ctx.beginPath();});
 
 /* APP */
 
@@ -283,7 +280,7 @@ let valor=lista[index];
 document.getElementById("item").textContent=valor;
 
 if(modo=="letras")
-document.getElementById("palabra").textContent=palabras[valor]||valor;
+document.getElementById("palabra").textContent="Letra "+valor;
 
 else if(modo=="numeros")
 document.getElementById("palabra").textContent="Número "+valor;
@@ -303,6 +300,7 @@ if(index>=lista.length){
 
 document.getElementById("aprendizaje").classList.add("hidden");
 document.getElementById("final").classList.remove("hidden");
+hablar("Muy bien");
 
 return;
 }
@@ -311,32 +309,24 @@ mostrar();
 
 }
 
-function hablar(){
+/* VOZ CORREGIDA */
 
-let texto=document.getElementById("palabra").textContent;
+function hablar(texto){
+
+if(!texto)
+texto=document.getElementById("palabra").textContent;
 
 let speech=new SpeechSynthesisUtterance(texto);
 
 speech.lang="es-MX";
 speech.rate=0.9;
 
+speechSynthesis.cancel();
 speechSynthesis.speak(speech);
 
 }
 
-function reiniciar(){
-
-document.getElementById("final").classList.add("hidden");
-document.getElementById("inicio").classList.remove("hidden");
-
-}
-
-function volver(){
-
-document.getElementById("aprendizaje").classList.add("hidden");
-document.getElementById("inicio").classList.remove("hidden");
-
-}
+/* CANVAS GUIA */
 
 function dibujarGuia(simbolo){
 
@@ -353,6 +343,119 @@ ctx.fillText(simbolo,canvas.width/2,canvas.height/2);
 
 function limpiar(){
 dibujarGuia(lista[index]);
+}
+
+function volver(){
+
+document.getElementById("aprendizaje").classList.add("hidden");
+document.getElementById("memorama").classList.add("hidden");
+document.getElementById("inicio").classList.remove("hidden");
+
+}
+
+function reiniciar(){
+
+document.getElementById("final").classList.add("hidden");
+document.getElementById("inicio").classList.remove("hidden");
+
+}
+
+/* MEMORAMA 16 CARTAS */
+
+let cartas=[];
+let primera=null;
+let segunda=null;
+let bloqueo=false;
+
+function iniciarMemorama(){
+
+document.getElementById("inicio").classList.add("hidden");
+document.getElementById("memorama").classList.remove("hidden");
+
+crearMemorama();
+
+}
+
+function crearMemorama(){
+
+let elementos=["A","A","1","1","2","2","B","B","⭐","⭐","🔺","🔺","3","3","⬜","⬜"];
+
+cartas=elementos.sort(()=>Math.random()-0.5);
+
+let tablero=document.getElementById("tablero");
+tablero.innerHTML="";
+
+cartas.forEach(valor=>{
+
+let carta=document.createElement("div");
+
+carta.className="carta oculta";
+carta.dataset.valor=valor;
+carta.innerHTML=valor;
+
+carta.onclick=voltear;
+
+tablero.appendChild(carta);
+
+});
+
+}
+
+function voltear(){
+
+if(bloqueo)return;
+
+this.classList.remove("oculta");
+
+if(!primera){
+primera=this;
+return;
+}
+
+segunda=this;
+
+bloqueo=true;
+
+if(primera.dataset.valor===segunda.dataset.valor){
+
+hablar("Bien");
+
+primera=null;
+segunda=null;
+bloqueo=false;
+
+verificar();
+
+}else{
+
+setTimeout(()=>{
+
+primera.classList.add("oculta");
+segunda.classList.add("oculta");
+
+primera=null;
+segunda=null;
+bloqueo=false;
+
+},800);
+
+}
+
+}
+
+function verificar(){
+
+let ocultas=document.querySelectorAll(".oculta");
+
+if(ocultas.length===0){
+
+hablar("Ganaste");
+
+document.getElementById("memorama").classList.add("hidden");
+document.getElementById("final").classList.remove("hidden");
+
+}
+
 }
 
 </script>

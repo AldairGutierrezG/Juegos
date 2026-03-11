@@ -62,6 +62,7 @@ canvas{
 border:3px dashed #bbb;
 border-radius:15px;
 background:#fff;
+touch-action:none;
 }
 
 .borrar{
@@ -82,8 +83,6 @@ display:none;
 font-size:120px;
 color:gold;
 }
-
-/* BOTON AVANZAR */
 
 .avanzar{
 position:fixed;
@@ -113,9 +112,7 @@ box-shadow:0 6px 12px rgba(0,0,0,0.2);
 <h1>Aprender</h1>
 
 <button class="letras" onclick="iniciar('letras')">📚 Letras</button>
-
 <button class="numeros" onclick="iniciar('numeros')">🔢 Números</button>
-
 <button class="figuras" onclick="iniciar('figuras')">🔺 Figuras</button>
 
 </div>
@@ -153,8 +150,6 @@ box-shadow:0 6px 12px rgba(0,0,0,0.2);
 </div>
 
 </div>
-
-<!-- BOTON AVANZAR -->
 
 <div class="avanzar" onclick="siguiente()">➡</div>
 
@@ -210,6 +205,10 @@ const canvas=document.getElementById("canvas");
 const ctx=canvas.getContext("2d");
 
 let dibujando=false;
+
+ctx.lineWidth=6;
+ctx.lineCap="round";
+ctx.strokeStyle="#333";
 
 function iniciar(tipo){
 
@@ -272,8 +271,11 @@ else texto=nombresFiguras[lista[index]];
 
 let speech=new SpeechSynthesisUtterance(texto);
 
-speech.lang="es-ES";
+speech.lang="es-MX";
+speech.rate=0.9;
+speech.pitch=1;
 
+speechSynthesis.cancel();
 speechSynthesis.speak(speech);
 
 }
@@ -297,9 +299,7 @@ function dibujarGuia(simbolo){
 ctx.clearRect(0,0,canvas.width,canvas.height);
 
 ctx.font="120px Arial";
-
 ctx.fillStyle="rgba(150,150,150,0.25)";
-
 ctx.textAlign="center";
 ctx.textBaseline="middle";
 
@@ -307,28 +307,66 @@ ctx.fillText(simbolo,canvas.width/2,canvas.height/2);
 
 }
 
-canvas.addEventListener("mousedown",()=>{dibujando=true});
-canvas.addEventListener("mouseup",()=>{dibujando=false;ctx.beginPath()});
-canvas.addEventListener("mousemove",dibujar);
-
-function dibujar(e){
-
-if(!dibujando)return;
-
-ctx.lineWidth=6;
-ctx.lineCap="round";
-ctx.strokeStyle="#333";
-
-ctx.lineTo(e.offsetX,e.offsetY);
-ctx.stroke();
-ctx.beginPath();
-ctx.moveTo(e.offsetX,e.offsetY);
-
-}
-
 function limpiar(){
 dibujarGuia(lista[index]);
 }
+
+/* EVENTOS MOUSE */
+
+canvas.addEventListener("mousedown",()=>{dibujando=true});
+
+canvas.addEventListener("mouseup",()=>{
+dibujando=false;
+ctx.beginPath();
+});
+
+canvas.addEventListener("mouseleave",()=>{
+dibujando=false;
+ctx.beginPath();
+});
+
+canvas.addEventListener("mousemove",(e)=>{
+
+if(!dibujando)return;
+
+ctx.lineTo(e.offsetX,e.offsetY);
+ctx.stroke();
+
+ctx.beginPath();
+ctx.moveTo(e.offsetX,e.offsetY);
+
+});
+
+/* EVENTOS TOUCH */
+
+canvas.addEventListener("touchstart",(e)=>{
+dibujando=true;
+e.preventDefault();
+});
+
+canvas.addEventListener("touchend",()=>{
+dibujando=false;
+ctx.beginPath();
+});
+
+canvas.addEventListener("touchmove",(e)=>{
+
+if(!dibujando)return;
+
+let rect=canvas.getBoundingClientRect();
+
+let x=e.touches[0].clientX-rect.left;
+let y=e.touches[0].clientY-rect.top;
+
+ctx.lineTo(x,y);
+ctx.stroke();
+
+ctx.beginPath();
+ctx.moveTo(x,y);
+
+e.preventDefault();
+
+});
 
 </script>
 

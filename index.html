@@ -62,17 +62,6 @@ canvas{
 border:3px dashed #bbb;
 border-radius:15px;
 background:#fff;
-touch-action:none;
-}
-
-.borrar{
-background:#FFB3B3;
-width:200px;
-}
-
-.volver{
-background:#ddd;
-width:150px;
 }
 
 .hidden{
@@ -131,11 +120,11 @@ box-shadow:0 6px 12px rgba(0,0,0,0.2);
 
 <br>
 
-<button class="borrar" onclick="limpiar()">🧽 Borrar</button>
+<button onclick="limpiar()">🧽 Borrar</button>
 
 <br>
 
-<button class="volver" onclick="volver()">Volver</button>
+<button onclick="volver()">Volver</button>
 
 </div>
 
@@ -154,10 +143,6 @@ box-shadow:0 6px 12px rgba(0,0,0,0.2);
 <div class="avanzar" onclick="siguiente()">➡</div>
 
 <script>
-
-/* CARGA VOCES PARA WEBVIEW */
-
-speechSynthesis.onvoiceschanged = () => {};
 
 /* DATOS */
 
@@ -178,29 +163,7 @@ A:"A de Árbol",
 B:"B de Barco",
 C:"C de Casa",
 D:"D de Dado",
-E:"E de Elefante",
-F:"F de Flor",
-G:"G de Gato",
-H:"H de Huevo",
-I:"I de Iglesia",
-J:"J de Jirafa",
-K:"K de Koala",
-L:"L de Luna",
-M:"M de Mano",
-N:"N de Nube",
-Ñ:"Ñ de Ñandú",
-O:"O de Oso",
-P:"P de Perro",
-Q:"Q de Queso",
-R:"R de Ratón",
-S:"S de Sol",
-T:"T de Tortuga",
-U:"U de Uva",
-V:"V de Vaca",
-W:"W de Wifi",
-X:"X de Xilófono",
-Y:"Y de Yoyo",
-Z:"Z de Zapato"
+E:"E de Elefante"
 };
 
 let lista=[];
@@ -218,43 +181,82 @@ ctx.lineWidth=6;
 ctx.lineCap="round";
 ctx.strokeStyle="#333";
 
-/* POINTER EVENTS (FUNCIONA EN TABLET Y APK) */
+/* FUNCION PARA POSICION */
 
-canvas.addEventListener("pointerdown",(e)=>{
-dibujando=true;
-canvas.setPointerCapture(e.pointerId);
-dibujar(e);
-});
-
-canvas.addEventListener("pointermove",(e)=>{
-if(!dibujando) return;
-dibujar(e);
-});
-
-canvas.addEventListener("pointerup",()=>{
-dibujando=false;
-ctx.beginPath();
-});
-
-canvas.addEventListener("pointercancel",()=>{
-dibujando=false;
-ctx.beginPath();
-});
-
-function dibujar(e){
+function posicionCanvas(e){
 
 let rect=canvas.getBoundingClientRect();
 
-let x=e.clientX-rect.left;
-let y=e.clientY-rect.top;
+return {
+x:e.clientX-rect.left,
+y:e.clientY-rect.top
+};
 
-ctx.lineTo(x,y);
+}
+
+/* ===== MOUSE ===== */
+
+canvas.addEventListener("mousedown",(e)=>{
+dibujando=true;
+});
+
+canvas.addEventListener("mouseup",()=>{
+dibujando=false;
+ctx.beginPath();
+});
+
+canvas.addEventListener("mousemove",(e)=>{
+
+if(!dibujando) return;
+
+let pos=posicionCanvas(e);
+
+ctx.lineTo(pos.x,pos.y);
 ctx.stroke();
 
 ctx.beginPath();
-ctx.moveTo(x,y);
+ctx.moveTo(pos.x,pos.y);
 
-}
+});
+
+/* ===== TOUCH ===== */
+
+canvas.addEventListener("touchstart",(e)=>{
+
+dibujando=true;
+
+let touch=e.touches[0];
+let pos=posicionCanvas(touch);
+
+ctx.moveTo(pos.x,pos.y);
+
+e.preventDefault();
+
+});
+
+canvas.addEventListener("touchend",()=>{
+
+dibujando=false;
+ctx.beginPath();
+
+});
+
+canvas.addEventListener("touchmove",(e)=>{
+
+if(!dibujando) return;
+
+let touch=e.touches[0];
+let pos=posicionCanvas(touch);
+
+ctx.lineTo(pos.x,pos.y);
+ctx.stroke();
+
+ctx.beginPath();
+ctx.moveTo(pos.x,pos.y);
+
+e.preventDefault();
+
+});
 
 /* APP */
 
@@ -281,7 +283,7 @@ let valor=lista[index];
 document.getElementById("item").textContent=valor;
 
 if(modo=="letras")
-document.getElementById("palabra").textContent=palabras[valor];
+document.getElementById("palabra").textContent=palabras[valor]||valor;
 
 else if(modo=="numeros")
 document.getElementById("palabra").textContent="Número "+valor;
@@ -309,33 +311,18 @@ mostrar();
 
 }
 
-/* VOZ */
-
 function hablar(){
 
-let texto="";
+let texto=document.getElementById("palabra").textContent;
 
-if(modo=="letras") texto=palabras[lista[index]];
-else if(modo=="numeros") texto="Número "+lista[index];
-else texto=nombresFiguras[lista[index]];
+let speech=new SpeechSynthesisUtterance(texto);
 
-let utterance=new SpeechSynthesisUtterance(texto);
+speech.lang="es-MX";
+speech.rate=0.9;
 
-let voces=speechSynthesis.getVoices();
-
-if(voces.length>0){
-utterance.voice=voces.find(v=>v.lang.includes("es")) || voces[0];
-}
-
-utterance.rate=0.9;
-utterance.pitch=1;
-
-speechSynthesis.cancel();
-speechSynthesis.speak(utterance);
+speechSynthesis.speak(speech);
 
 }
-
-/* NAVEGACION */
 
 function reiniciar(){
 
@@ -350,8 +337,6 @@ document.getElementById("aprendizaje").classList.add("hidden");
 document.getElementById("inicio").classList.remove("hidden");
 
 }
-
-/* GUIA PARA CALCAR */
 
 function dibujarGuia(simbolo){
 

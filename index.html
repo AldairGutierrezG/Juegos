@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Aprender Jugando</title>
+
+<style>
+
+body{
+font-family:'Comic Sans MS', sans-serif;
+margin:0;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+text-align:center;
+
+background:#F4F9FF;
+
+background-image:
+radial-gradient(circle at 10% 20%, #FFD6E0 40px, transparent 41px),
+radial-gradient(circle at 80% 30%, #CDE7FF 50px, transparent 51px),
+radial-gradient(circle at 30% 80%, #FFF3B0 45px, transparent 46px),
+radial-gradient(circle at 90% 80%, #D8F8C6 60px, transparent 61px);
+}
+
+.container{
+width:100%;
+max-width:520px;
+background:white;
+border-radius:20px;
+padding:20px;
+box-shadow:0 10px 25px rgba(0,0,0,0.15);
+}
+
+button{
+padding:18px;
+margin:8px;
+font-size:22px;
+border:none;
+border-radius:20px;
+cursor:pointer;
+width:80%;
+}
+
+.letras{background:#A8E6CF;}
+.numeros{background:#FFD3B6;}
+.figuras{background:#B5D9FF;}
+.memoria{background:#F7C6FF;}
+
+.item{
+font-size:130px;
+}
+
+.palabra{
+font-size:28px;
+}
+
+canvas{
+border:3px dashed #bbb;
+border-radius:15px;
+background:#fff;
+}
+
+.hidden{
+display:none;
+}
+
+.avanzar{
+position:fixed;
+bottom:25px;
+right:25px;
+font-size:45px;
+background:#FFD966;
+width:80px;
+height:80px;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+cursor:pointer;
+}
+
+/* MEMORIA */
+
+.grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:10px;
+margin-top:20px;
+}
+
+.card{
+height:70px;
+background:#eee;
+border-radius:10px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:30px;
+cursor:pointer;
+}
+
+.card.open{
+background:white;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div id="inicio">
+
+<h1>Aprender</h1>
+
+<button class="letras" onclick="iniciar('letras')">📚 Letras</button>
+<button class="numeros" onclick="iniciar('numeros')">🔢 Números</button>
+<button class="figuras" onclick="iniciar('figuras')">🔺 Figuras</button>
+<button class="memoria" onclick="iniciarMemoria()">🧠 Memoria</button>
+
+</div>
+
+
+<div id="aprendizaje" class="hidden">
+
+<div class="item" id="item"></div>
+
+<div class="palabra" id="palabra"></div>
+
+<div style="font-size:40px;cursor:pointer;" onclick="hablar()">🔊</div>
+
+<h3>Dibuja aquí ✏</h3>
+
+<canvas id="canvas" width="350" height="200"></canvas>
+
+<br>
+
+<button onclick="limpiar()">🧽 Borrar</button>
+
+<br>
+
+<button onclick="volver()">Volver</button>
+
+</div>
+
+
+<div id="memoria" class="hidden">
+
+<h2>Juego de Memoria</h2>
+
+<div class="grid" id="grid"></div>
+
+<br>
+
+<button onclick="volver()">Volver</button>
+
+</div>
+
+</div>
+
+<div class="avanzar" onclick="siguiente()">➡</div>
+
+<script>
+
+const letras="ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("");
+
+/* NUMEROS HASTA 100 */
+
+const numeros=[];
+for(let i=0;i<=100;i++)numeros.push(i.toString());
+
+const figuras=["⬜","🔺","⚫","⭐"];
+
+const nombresFiguras={
+"⬜":"Cuadrado",
+"🔺":"Triángulo",
+"⚫":"Círculo",
+"⭐":"Estrella"
+};
+
+const palabras={
+A:"A de Árbol",
+B:"B de Barco",
+C:"C de Casa",
+D:"D de Dado",
+E:"E de Elefante"
+};
+
+let lista=[];
+let modo="";
+let index=0;
+
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+
+function iniciar(tipo){
+
+modo=tipo;
+index=0;
+
+if(tipo=="letras")lista=letras;
+if(tipo=="numeros")lista=numeros;
+if(tipo=="figuras")lista=figuras;
+
+document.getElementById("inicio").classList.add("hidden");
+document.getElementById("aprendizaje").classList.remove("hidden");
+
+mostrar();
+
+}
+
+function mostrar(){
+
+let valor=lista[index];
+
+document.getElementById("item").textContent=valor;
+
+if(modo=="letras")
+document.getElementById("palabra").textContent=palabras[valor]||valor;
+
+else if(modo=="numeros")
+document.getElementById("palabra").textContent="Número "+valor;
+
+else
+document.getElementById("palabra").textContent=nombresFiguras[valor];
+
+dibujarGuia(valor);
+
+}
+
+function siguiente(){
+
+index++;
+
+if(index>=lista.length){
+index=0;
+}
+
+mostrar();
+
+}
+
+function hablar(){
+
+let texto=document.getElementById("palabra").textContent;
+
+let speech=new SpeechSynthesisUtterance(texto);
+
+speech.lang="es-ES";
+
+speechSynthesis.speak(speech);
+
+}
+
+function volver(){
+
+document.querySelectorAll(".container > div").forEach(d=>d.classList.add("hidden"));
+
+document.getElementById("inicio").classList.remove("hidden");
+
+}
+
+function dibujarGuia(simbolo){
+
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+ctx.font="120px Arial";
+
+ctx.fillStyle="rgba(150,150,150,0.25)";
+
+ctx.textAlign="center";
+ctx.textBaseline="middle";
+
+ctx.fillText(simbolo,canvas.width/2,canvas.height/2);
+
+}
+
+function limpiar(){
+dibujarGuia(lista[index]);
+}
+
+/* MEMORIA */
+
+let cartas=[];
+let abiertas=[];
+
+function iniciarMemoria(){
+
+document.getElementById("inicio").classList.add("hidden");
+document.getElementById("memoria").classList.remove("hidden");
+
+let base=["A","3","⬜","B","5","🔺"];
+
+cartas=[...base,...base];
+
+cartas.sort(()=>Math.random()-0.5);
+
+let grid=document.getElementById("grid");
+
+grid.innerHTML="";
+
+cartas.forEach((c,i)=>{
+
+let card=document.createElement("div");
+
+card.className="card";
+
+card.dataset.valor=c;
+
+card.dataset.index=i;
+
+card.onclick=voltear;
+
+grid.appendChild(card);
+
+});
+
+}
+
+function voltear(){
+
+if(this.classList.contains("open"))return;
+
+this.textContent=this.dataset.valor;
+
+this.classList.add("open");
+
+abiertas.push(this);
+
+if(abiertas.length==2){
+
+let a=abiertas[0];
+let b=abiertas[1];
+
+if(a.dataset.valor==b.dataset.valor){
+
+abiertas=[];
+
+}else{
+
+setTimeout(()=>{
+
+a.textContent="";
+b.textContent="";
+a.classList.remove("open");
+b.classList.remove("open");
+
+abiertas=[];
+
+},800);
+
+}
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
